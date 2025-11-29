@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cannileon — Loja Indie</title>
+<style>
+  /* --- BASE / CORES --- */
+  :root{
+    --sea:#cfead2;
+    --sea-dark:#2a6460;
+    --panel:#ffffff;
+    --muted:#6b6b6b;
+    --shadow:0 8px 30px rgba(10,20,15,0.06);
+    --radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background:#f6f8f7;color:#113;line-height:1.4;padding-top:76px;
+  }
+
+  /* --- TOPBAR --- */
+  header.topbar{
+    position:fixed;inset:0 0 auto 0;height:76px;
+    background:linear-gradient(180deg,var(--sea),#dff6e8);
+    display:flex;align-items:center;justify-content:space-between;padding:14px 26px;border-bottom:3px solid rgba(0,0,0,0.04);
+    z-index:80;
+  }
+  .nav-left{display:flex;gap:18px;align-items:center}
+  .logo-circle{width:56px;height:56px;border-radius:50%;background:var(--sea-dark);display:grid;place-items:center;color:white;font-weight:700;border:6px solid var(--sea);transform:translateY(-4px)}
+  nav a{font-weight:600;color:var(--sea-dark);text-decoration:none;margin-right:12px}
+  .nav-right{display:flex;gap:10px;align-items:center}
+  .icon-btn{background:transparent;border:2px solid rgba(0,0,0,0.06);padding:8px 12px;border-radius:10px;cursor:pointer}
+  .icon-btn.primary{background:var(--sea-dark);color:#fff;border:none}
+
+  /* --- LAYOUT --- */
+  main.container{max-width:1200px;margin:18px auto;padding:12px;display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:start}
+  /* left sidebar */
+  .sidebar{background:var(--panel);padding:16px;border-radius:10px;border:2px solid rgba(0,0,0,0.04);box-shadow:var(--shadow);height:calc(100vh - 120px);overflow:auto}
+  .profile{display:flex;gap:12px;align-items:flex-start}
+  .logo-mini{width:250px;height:72px;border-radius:8px;background:var(--sea-dark);display:grid;place-items:center;color:#fff;font-weight:800}
+  .profile h3{font-size:16px;margin-bottom:6px}
+  .profile p{font-size:13px;color:var(--muted);max-height:120px;overflow:auto}
+  .socials{display:flex;gap:8px;margin-top:12px}
+  .promo-list{margin-top:12px;display:grid;gap:12px}
+
+  /* center content */
+  .content{min-height:60vh}
+  .content-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .content h2{color:var(--sea-dark);margin:0}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .tile{
+    height:160px;background:var(--sea);border:2px solid rgba(0,0,0,0.04);border-radius:8px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-weight:700;color:var(--sea-dark);overflow:hidden;cursor:pointer;position:relative;
+  }
+  .tile img{width:100%;height:100%;object-fit:cover;display:block}
+  .tile .label{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;font-weight:700;color:var(--sea-dark)}
+
+  /* product view (same file) */
+  .product-screen{display:none;background:linear-gradient(180deg,#fff,#fbfffb);border-radius:10px;border:2px solid rgba(0,0,0,0.04);padding:18px;box-shadow:var(--shadow);grid-column:1 / -1}
+  .product-screen.active{display:flex;gap:18px;align-items:flex-start}
+  .product-media{width:46%;min-height:420px;border-radius:8px;background:var(--sea);display:grid;place-items:center;border:6px dashed rgba(0,0,0,0.06);overflow:hidden}
+  .product-media img{width:100%;height:100%;object-fit:cover}
+  .product-info{width:54%;padding:18px;background:var(--panel);border-radius:8px;border:2px solid rgba(0,0,0,0.04)}
+  .product-info h3{font-size:20px;margin-bottom:12px;color:var(--sea-dark)}
+  .product-info ul{margin:12px 0 18px 18px}
+  .product-info .actions{display:flex;gap:10px;margin-top:18px}
+  .btn{padding:10px 14px;border-radius:8px;border:2px solid rgba(0,0,0,0.06);cursor:pointer;background:#fff}
+  .btn.primary{background:var(--sea-dark);color:white;border:none}
+
+  /* cart popup lateral */
+  .cart-overlay{position:fixed;inset:0;display:none;z-index:120}
+  .cart-overlay.open{display:block}
+  .cart-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.28)}
+  .cart-panel{position:absolute;right:0;top:0;height:100%;width:360px;background:var(--panel);box-shadow:-8px 0 30px rgba(0,0,0,0.15);padding:18px;border-left:1px solid rgba(0,0,0,0.06);transform:translateX(100%);transition:transform .28s ease}
+  .cart-overlay.open .cart-panel{transform:translateX(0)}
+  .cart-panel h4{margin-top:6px;color:var(--sea-dark)}
+  .cart-list{margin-top:12px;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow:auto}
+  .cart-item{display:flex;gap:10px;align-items:center;border-radius:8px;padding:8px;background:#fbfffb;border:1px solid rgba(0,0,0,0.03)}
+  .cart-item img{width:64px;height:64px;object-fit:cover;border-radius:6px}
+  .cart-item .meta b{display:block;font-size:14px}
+  .cart-item .qty{display:flex;gap:6px;align-items:center;margin-left:auto}
+  .small-btn{padding:6px 8px;border-radius:6px;border:none;background:rgba(0,0,0,0.06);cursor:pointer}
+
+  .cart-footer{margin-top:12px;border-top:1px dashed rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+  .cart-total{font-weight:800;color:var(--sea-dark);font-size:16px;text-align:right}
+
+  /* auth small screens (inline) */
+  .auth-screen{display:none}
+  .auth-screen.active{display:block;background:var(--panel);padding:16px;border-radius:8px;border:2px solid rgba(0,0,0,0.04);box-shadow:var(--shadow);margin-top:12px}
+
+  footer{grid-column:1 / -1;text-align:center;color:var(--muted);font-size:13px;margin-top:16px}
+
+  @media(max-width:920px){
+    main.container{grid-template-columns:1fr;padding:10px}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .product-media{width:100%;height:260px}
+    .product-info{width:100%}
+    .cart-panel{width:90%}
+  }
+  
+  .tile img{
+  transition: transform .35s ease;
+}
+
+.tile:hover img{
+  transform: scale(1.08);
+}
+/* ==== POPUP AJUDA ==== */
+.help-popup{
+  position:fixed;
+  inset:0;
+  display:none;
+  z-index:200;
+}
+
+.help-popup.open{
+  display:block;
+}
+
+.help-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+}
+
+.help-box{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  background:#fff;
+  width:360px;
+  padding:22px;
+  border-radius:12px;
+  box-shadow:0 0 40px rgba(0,0,0,0.35);
+  color:#113;
+}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="nav-left">
+    <div class="logo-circle" title="Cannileon">
+  <img src="imagens/Desenho_logo.png" alt="Logo" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+</div>
+    <nav>
+      <a href="#" data-nav="home">Início</a>
+      <a href="#" data-nav="ajuda">Ajuda</a>
+    </nav>
+  </div>
+
+  <div class="nav-right">
+    <button class="icon-btn" id="btn-cadastro">Criar conta</button>
+    <button class="icon-btn" id="btn-login">Entrar</button>
+    <button class="icon-btn primary" id="btn-cart">Carrinho (0)</button>
+  </div>
+</header>
+
+<main class="container">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="profile">
+      <div class="logo-mini">
+  <img src="imagens/Desenho_logo.png" alt="Logo" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+</div>
+
+      <div>
+        <h3>Cannileon</h3>
+        <p>Peças upcycled, tingimentos artesanais e patches costurados à mão.</p>
+      </div>
+    </div>
+
+    <hr style="margin:14px 0;border:none;border-top:1px dashed rgba(0,0,0,0.06)">
+
+    <strong style="color:var(--sea-dark)">PROMOÇÕES DA SEMANA</strong>
+    <div class="promo-list" style="margin-top:10px">
+      <div class="tile promo" data-product-id="promo1"><img src="imagens/amygdala.jpg" alt="imagens/amygdala.jpg"><div class="label">Promo 1</div></div>
+      <div class="tile promo" data-product-id="promo2"><img src="imagens/arvores.jpg" alt="imagens/arvores.jpg"><div class="label">Promo 2</div></div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <section class="content">
+    <!-- HOME / GRID -->
+    <div id="home" class="screen active">
+      <div class="content-header">
+        <h2>Novidades e Promoções</h2>
+        <div style="color:var(--muted);font-size:13px">Bem-vindo à Cannileon</div>
+      </div>
+
+      <div class="grid" id="productGrid">
+        <!-- JS will populate tiles -->
+      </div>
+      <footer>© Cannileon — layout demo</footer>
+    </div>
+
+    <!-- PRODUCT VIEW (dynamic) -->
+    <div id="productView" class="product-screen screen" aria-hidden="true">
+      <div class="product-media" id="productImageWrap">
+        <img src="" alt="Imagem da roupa" id="productImage">
+      </div>
+      <div class="product-info">
+        <button class="btn" id="backToHome">← Voltar</button>
+        <h3 id="productTitle">*produto*</h3>
+        <ul>
+          <li>tamanhos: <span id="productSizes"></span></li>
+          <li>frete: <span id="productFrete"></span></li>
+          <li>quantidade: <span id="productQty"></span></li>
+          <li>devolução: <span id="productReturn"></span></li>
+        </ul>
+        <div class="actions">
+          <button class="btn" id="add-cart">Adicionar ao carrinho</button>
+          <button class="btn primary" id="buy-now">Comprar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- small auth area -->
+    <div id="authArea" style="grid-column:1 / -1"></div>
+  </section>
+</main>
+
+<!-- CART POPUP (lateral) -->
+<div class="cart-overlay" id="cartOverlay" aria-hidden="true">
+  <div class="cart-backdrop" id="cartBackdrop"></div>
+  <aside class="cart-panel" role="dialog" aria-label="Carrinho">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h4>Carrinho</h4>
+      <button class="icon-btn" id="closeCart">✕</button>
+    </div>
+    <div style="color:var(--muted);font-size:13px;margin-top:6px">Seus itens</div>
+
+    <div class="cart-list" id="cartList">
+      <div style="color:var(--muted);font-size:13px;margin-top:10px">Seu carrinho está vazio</div>
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-total" id="cartTotal">Total: R$ 0,00</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" id="clearCart">Limpar</button>
+        <button class="btn primary" id="checkoutBtn">Finalizar compra</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ================= POPUP DE AJUDA ================= -->
+<div id="helpPopup" class="help-popup" aria-hidden="true">
+  <div class="help-backdrop"></div>
+
+  <div class="help-box">
+    <h3>Precisa de ajuda?</h3>
+    <p>
+      👋 Olá! Caso precise de suporte, envie uma mensagem para:<br><br>
+      <b>Email:</b> suporteCannileon@gmail.com<br>
+      <b>Instagram:</b> @cannileon.store<br><br>
+      Responderemos em até 3 dias!
+    </p>
+
+    <button id="closeHelp" class="btn primary" style="margin-top:10px">
+      Fechar
+    </button>
+  </div>
+</div>
+<!-- =============== FIM POPUP DE AJUDA =============== -->
+
+<script>
+/* ===================== DADOS INICIAIS ===================== */
+/* Troque os campos img:'' pelas URLs / caminhos das suas imagens */
+const products = [
+  { 
+    id:'p1',
+    title:'Amygdala',
+    price:129.90,
+    img:'imagens/amygdala.jpg',
+    sizes:['PP','P','M','G'],
+    frete:'R$15 (ou grátis acima de R$199)',
+    qty:10,
+    ret:'Não aceitamos devoluções'
+  },
+  { 
+    id:'p2',
+    title:'Arvore',
+    price:89.90,
+    img:'imagens/arvores.jpg',
+    sizes:['P','M','G'],
+    frete:'R$12',
+    qty:5,
+    ret:'Devolução em 7 dias'
+  },
+  { 
+    id:'p3',
+    title:'Centopeia',
+    price:119.00,
+    img:'imagens/centopeia.jpg',
+    sizes:['M','G'],
+    frete:'R$18',
+    qty:3,
+    ret:'Não aceitamos devoluções'
+  },
+  { 
+    id:'p4',
+    title:'Mão',
+    price:99.00,
+    img:'imagens/mão.jpg',
+    sizes:['P','M','G'],
+    frete:'R$20',
+    qty:8,
+    ret:'Sem devoluções'
+  }
+];
+/* ===================== HELPERS / STORAGE ===================== */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+function saveCart(cart){ localStorage.setItem('cann_cart', JSON.stringify(cart)); }
+function loadCart(){ return JSON.parse(localStorage.getItem('cann_cart')||'[]'); }
+function saveUsers(u){ localStorage.setItem('cann_users', JSON.stringify(u)); }
+function loadUsers(){ return JSON.parse(localStorage.getItem('cann_users')||'[]'); }
+function setLogged(username){ localStorage.setItem('cann_user', username); updateAuthUI(); }
+function getLogged(){ return localStorage.getItem('cann_user'); }
+function clearLogged(){ localStorage.removeItem('cann_user'); updateAuthUI(); }
+
+/* ===================== RENDER GRID ===================== */
+const productGrid = $('#productGrid');
+function renderGrid(){
+  productGrid.innerHTML = '';
+  products.slice(0,6).forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'tile';
+    card.dataset.id = p.id;
+    const img = document.createElement('img');
+    img.src = p.img || '';
+    img.alt = p.title;
+    // if no image, we keep green background and set alt text visible by label
+    card.appendChild(img);
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = p.title;
+    card.appendChild(label);
+    card.addEventListener('click', ()=> openProduct(p.id));
+    productGrid.appendChild(card);
+  });
+
+  // promos in sidebar
+  $$('.promo').forEach(el=>{
+    const id = el.dataset.productId;
+    const found = products.find(x=>x.id===id);
+    if(found){
+      const im = el.querySelector('img');
+      if(im) im.src = found.img || '';
+      const lab = el.querySelector('.label');
+      if(lab) lab.textContent = found.title;
+      el.onclick = ()=> openProduct(found.id);
+    }
+  });
+}
+
+/* ===================== NAV / SCREEN ===================== */
+function showHome(){
+  // hide product view
+  $('#productView').classList.remove('active');
+  document.getElementById('home').style.display = '';
+  // hide auth screens
+  $('#authArea').innerHTML = '';
+  window.scrollTo({top:90,behavior:'smooth'});
+}
+
+/* ===================== PRODUCT VIEW ===================== */
+function openProduct(id){
+  const p = products.find(x=>x.id===id);
+  if(!p){ alert('Produto não encontrado'); return; }
+  $('#productImage').src = p.img || '';
+  $('#productTitle').textContent = p.title;
+  $('#productSizes').textContent = p.sizes.join(' ');
+  $('#productFrete').textContent = p.frete;
+  $('#productQty').textContent = p.qty;
+  $('#productReturn').textContent = p.ret;
+  $('#add-cart').dataset.id = p.id;
+  $('#buy-now').dataset.id = p.id;
+
+  // show product view
+  document.getElementById('home').style.display = 'none';
+  $('#productView').classList.add('active');
+  window.scrollTo({top:90,behavior:'smooth'});
+}
+$('#backToHome').addEventListener('click', showHome);
+
+/* ===================== CART (pop-up lateral) ===================== */
+const cartOverlay = $('#cartOverlay');
+const cartListEl = $('#cartList');
+const cartTotalEl = $('#cartTotal');
+const btnCart = $('#btn-cart');
+
+function renderCartUI(){
+  const cart = loadCart();
+  cartListEl.innerHTML = '';
+  if(!cart.length){
+    cartListEl.innerHTML = '<div style="color:var(--muted);font-size:13px;margin-top:10px">Seu carrinho está vazio</div>';
+    cartTotalEl.textContent = 'Total: R$ 0,00';
+  } else {
+    let total = 0;
+    cart.forEach((item, idx)=>{
+      const prod = products.find(p=>p.id===item.id) || {title:'Produto', img:'', price:0};
+      total += prod.price * item.qty;
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <img src="${prod.img||''}" alt="">
+        <div style="flex:1">
+          <div class="meta"><b>${prod.title}</b></div>
+          <div style="color:var(--muted);font-size:13px">R$ ${prod.price.toFixed(2)}</div>
+        </div>
+        <div class="qty">
+          <button class="small-btn" data-idx="${idx}" data-action="minus">-</button>
+          <div style="min-width:28px;text-align:center">${item.qty}</div>
+          <button class="small-btn" data-idx="${idx}" data-action="plus">+</button>
+          <button class="small-btn" data-idx="${idx}" data-action="remove">✕</button>
+        </div>
+      `;
+      cartListEl.appendChild(div);
+    });
+    cartTotalEl.textContent = `Total: R$ ${total.toFixed(2)}`;
+  }
+  updateCartCount();
+}
+
+/* cart actions from UI */
+cartListEl.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const idx = Number(btn.dataset.idx);
+  const action = btn.dataset.action;
+  let cart = loadCart();
+  if(action==='remove'){ cart.splice(idx,1); saveCart(cart); renderCartUI(); return; }
+  if(action==='plus'){ cart[idx].qty++; saveCart(cart); renderCartUI(); return; }
+  if(action==='minus'){ if(cart[idx].qty>1) cart[idx].qty--; else cart.splice(idx,1); saveCart(cart); renderCartUI(); return; }
+});
+
+/* open/close cart */
+btnCart.addEventListener('click', ()=>{
+  cartOverlay.classList.add('open');
+  cartOverlay.setAttribute('aria-hidden','false');
+  renderCartUI();
+});
+$('#closeCart').addEventListener('click', ()=>{ cartOverlay.classList.remove('open'); cartOverlay.setAttribute('aria-hidden','true'); });
+$('#cartBackdrop').addEventListener('click', ()=>{ cartOverlay.classList.remove('open'); cartOverlay.setAttribute('aria-hidden','true'); });
+
+/* clear & checkout */
+$('#clearCart').addEventListener('click', ()=>{
+  if(confirm('Limpar carrinho?')){ saveCart([]); renderCartUI(); }
+});
+$('#checkoutBtn').addEventListener('click', ()=>{
+  const cart = loadCart();
+  if(!cart.length){ alert('Carrinho vazio'); return; }
+  if(!getLogged()){
+    if(!confirm('Você não está logado. Continuar como visitante?')) return;
+  }
+  alert('Compra finalizada (demo). Obrigado!');
+  saveCart([]); renderCartUI(); cartOverlay.classList.remove('open');
+});
+
+/* helper: update counter in top button */
+function updateCartCount(){
+  const cart = loadCart();
+  const totalItems = cart.reduce((s,i)=>s + i.qty, 0);
+  btnCart.textContent = `Carrinho (${totalItems})`;
+}
+
+/* quick add-to-cart from product view */
+$('#add-cart').addEventListener('click', ()=>{
+  const id = $('#add-cart').dataset.id;
+  if(!id) return;
+  let cart = loadCart();
+  const found = cart.find(x=>x.id===id);
+  if(found) found.qty++;
+  else cart.push({id, qty:1});
+  saveCart(cart);
+  renderCartUI();
+  alert('Adicionado ao carrinho');
+});
+$('#buy-now').addEventListener('click', ()=>{
+  const id = $('#buy-now').dataset.id;
+  if(!id) return;
+  // add then open checkout demo
+  let cart = loadCart();
+  const found = cart.find(x=>x.id===id);
+  if(found) found.qty++;
+  else cart.push({id, qty:1});
+  saveCart(cart);
+  renderCartUI();
+  cartOverlay.classList.add('open');
+});
+
+/* ===================== AUTH (cadastro/login simple) ===================== */
+function updateAuthUI(){
+  const user = getLogged();
+  if(user){
+    $('#btn-login').style.display='none';
+    $('#btn-cadastro').style.display='none';
+    // replace with welcome + logout small (we keep same header look but simple)
+    const right = document.querySelector('.nav-right');
+    if(!$('#_welcome')){
+      const span = document.createElement('span');
+      span.id = '_welcome';
+      span.style.fontWeight='600';
+      span.style.color='var(--sea-dark)';
+      span.style.marginRight='8px';
+      span.textContent = `Olá, ${user}`;
+      right.insertBefore(span, $('#btn-cadastro'));
+      const lg = document.createElement('button');
+      lg.className='icon-btn';
+      lg.id='btn-logout';
+      lg.textContent='Sair';
+      right.appendChild(lg);
+      lg.addEventListener('click', ()=>{ clearLogged(); lg.remove(); $('#_welcome')?.remove(); });
+    } else {
+      $('#_welcome').textContent = `Olá, ${user}`;
+    }
+  } else {
+    // remove welcome if exists
+    $('#_welcome')?.remove();
+    $('#btn-logout')?.remove();
+    $('#btn-login').style.display='';
+    $('#btn-cadastro').style.display='';
+  }
+}
+
+/* show small inline auth forms in the authArea */
+$('#btn-cadastro').addEventListener('click', ()=>{
+  $('#authArea').innerHTML = `
+    <div class="auth-screen active" id="cadastroScreen">
+      <h3>Criar conta</h3>
+      <input id="regUser" placeholder="Usuário" style="width:260px;padding:8px;margin-top:8px"/><br/>
+      <input id="regEmail" placeholder="E-mail" style="width:260px;padding:8px;margin-top:8px"/><br/>
+      <input id="regPass" placeholder="Senha" type="password" style="width:260px;padding:8px;margin-top:8px"/><br/>
+      <div style="margin-top:8px">
+        <button class="btn primary" id="do-cadastro-inline">Criar</button>
+        <button class="btn" id="cancel-cadastro-inline">Cancelar</button>
+      </div>
+    </div>`;
+  $('#do-cadastro-inline').addEventListener('click', ()=>{
+    const user = $('#regUser').value.trim();
+    const email = $('#regEmail').value.trim();
+    const pass = $('#regPass').value.trim();
+    if(!user||!email||!pass){ alert('Preencha todos os campos'); return; }
+    const users = loadUsers();
+    if(users.find(u=>u.email===email)){ alert('E-mail já cadastrado'); return; }
+    users.push({user,email,pass});
+    saveUsers(users);
+    alert('Conta criada! Faça login.');
+    $('#authArea').innerHTML = '';
+  });
+  $('#cancel-cadastro-inline').addEventListener('click', ()=>{ $('#authArea').innerHTML = ''; });
+});
+
+$('#btn-login').addEventListener('click', ()=>{
+  $('#authArea').innerHTML = `
+    <div class="auth-screen active" id="loginScreen">
+      <h3>Entrar</h3>
+      <input id="logUser" placeholder="Usuário ou e-mail" style="width:260px;padding:8px;margin-top:8px"/><br/>
+      <input id="logPass" placeholder="Senha" type="password" style="width:260px;padding:8px;margin-top:8px"/><br/>
+      <div style="margin-top:8px">
+        <button class="btn primary" id="do-login-inline">Entrar</button>
+        <button class="btn" id="cancel-login-inline">Cancelar</button>
+      </div>
+    </div>`;
+  $('#do-login-inline').addEventListener('click', ()=>{
+    const inpu = $('#logUser').value.trim();
+    const pass = $('#logPass').value.trim();
+    const users = loadUsers();
+    const found = users.find(u => (u.user===inpu || u.email===inpu) && u.pass===pass);
+    if(!found){ alert('Usuário ou senha incorretos'); return; }
+    setLogged(found.user);
+    $('#authArea').innerHTML = '';
+  });
+  $('#cancel-login-inline').addEventListener('click', ()=>{ $('#authArea').innerHTML = ''; });
+});
+
+/* ===================== INIT / BOOT ===================== */
+function init(){
+  renderGrid();
+  renderCartUI();
+  updateCartCount();
+  updateAuthUI();
+}
+init();
+
+/* make sure cart button shows initial count */
+updateCartCount();
+
+/* Expose helper to set images quickly from console if you want:
+   ex: products[0].img = 'https://...'; renderGrid();
+*/
+/* ==== POPUP AJUDA ==== */
+const helpPopup = document.getElementById('helpPopup');
+const closeHelp = document.getElementById('closeHelp');
+const helpBtn = document.querySelector('[data-nav="ajuda"]');
+
+helpBtn.addEventListener('click', (e)=>{
+  e.preventDefault();
+  helpPopup.classList.add('open');
+  helpPopup.setAttribute('aria-hidden','false');
+});
+
+closeHelp.addEventListener('click', ()=>{
+  helpPopup.classList.remove('open');
+  helpPopup.setAttribute('aria-hidden','true');
+});
+
+helpPopup.querySelector('.help-backdrop').addEventListener('click', ()=>{
+  helpPopup.classList.remove('open');
+  helpPopup.setAttribute('aria-hidden','true');
+});
+
+</script>
+</body>
+</html>
